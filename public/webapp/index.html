@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="ru" data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Plates Game</title>
+    <meta name="bot-username" content=""> <!-- укажи юзернейм бота, например plates_game_bot -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="stylesheet" href="./styles.css" />
+    <link rel="stylesheet" href="/webapp/style.css">
+</head>
+  <body>
+<div class="topbar">
+  <a class="btn btn-primary" href="/webapp/racer/">🚀 Открыть Стритрейсер</a>
+</div>
+    <div class="container">
+      <header class="header">
+        <div class="brand"><div class="logo"></div> <span>Plates Game</span></div>
+        <div class="actions">
+          <a class="btn primary hidden" id="cta-open-bot" href="javascript:void(0)">Открыть в Telegram</a>
+        </div>
+      </header>
+
+      <nav class="nav">
+        <div class="tab active" data-target="me">🚗 Мои авто</div>
+        <div class="tab" data-target="leaderboard">🏆 Топ</div>
+        <div class="tab" data-target="rules">📜 Правила</div>
+        <div class="tab" data-target="howto">ℹ️ Как играть</div>
+      </nav>
+
+      <section class="hero card" id="hero">
+        <div class="avatar">PG</div>
+        <div class="hero-info">
+          <h1 class="hero-title">Plates Game</h1>
+          <div class="hero-sub">Добро пожаловать, <b class="me-username">гость</b> — играй через хэштег, смотри рейтинг и регистрируй свои номера.</div>
+        </div>
+      </section>
+
+      <section class="card" id="me">
+        <h2>Мои авто</h2>
+        <div class="row" style="margin-bottom:10px">
+          <input class="input flex-1" id="new-plate" placeholder="Например: ABC123" />
+          <button class="btn" id="btn-add-plate">➕ Добавить</button>
+        </div>
+        <div id="cars-wrap" class="row"></div>
+        <p class="muted">Добавление/удаление работает при открытии страницы через бота (Telegram Web App), чтобы мы знали ваш аккаунт.</p>
+      </section>
+
+      <div class="grid">
+        <section class="card" id="rules">
+          <h2>Правила</h2>
+          <div class="content muted">Загрузка…</div>
+        </section>
+
+        <section class="card" id="leaderboard">
+          <h2>Топ игроков</h2>
+          <table class="table">
+            <thead><tr><th>#</th><th>Игрок</th><th>Очки</th><th>Уник. номера</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </section>
+      </div>
+
+      <section class="card" id="howto">
+        <h2>Как играть</h2>
+        <div class="content muted">Загрузка…</div>
+      </section>
+
+      <section class="card hidden" id="leaderboard-empty">
+        <h2>Таблица лидеров</h2>
+        <p class="muted">Пока пусто. Сфотографируйте номер с нужным хэштегом и вернитесь сюда!</p>
+      </section>
+
+      <footer class="footer">© Plates Game — тема синхронизируется с Telegram и системой</footer>
+    </div>
+
+    <script src="./user-app.js"></script>
+  </body>
+</html>

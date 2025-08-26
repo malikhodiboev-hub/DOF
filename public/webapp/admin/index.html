@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="ru" data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Plates Admin</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="stylesheet" href="../styles.css" />
+  </head>
+  <body>
+    <div class="container">
+      <header class="header">
+        <div class="brand"><div class="logo"></div> <span>Admin · Plates</span></div>
+        <div class="actions">
+          <a class="btn" href="/webapp/">← Игровая страница</a>
+        </div>
+      </header>
+
+      <div class="admin-grid">
+        <aside class="sidebar">
+          <nav class="menu">
+            <a href="#" class="active" data-target="dash">📊 Дашборд</a>
+            <a href="#" data-target="lb">🏆 Лидеры</a>
+            <a href="#" data-target="users">👥 Игроки</a>
+            <a href="#" data-target="actions">⚙️ Действия</a>
+          </nav>
+        </aside>
+
+        <main>
+          <section class="card" id="dash">
+            <h2>Сводка</h2>
+            <div class="stat-grid" id="stats">
+              <div class="stat"><div class="v" id="stat-users">—</div><div class="l">Игроков</div></div>
+              <div class="stat"><div class="v" id="stat-subm">—</div><div class="l">Фотографий</div></div>
+              <div class="stat"><div class="v" id="stat-uniq">—</div><div class="l">Уникальных номеров</div></div>
+              <div class="stat"><div class="v" id="stat-cars">—</div><div class="l">Зарегистр. авто</div></div>
+            </div>
+          </section>
+
+          <section class="card hidden" id="lb">
+            <h2>Таблица лидеров</h2>
+            <table class="table">
+              <thead><tr><th>#</th><th>Игрок</th><th>Очки</th><th>Уник.</th></tr></thead>
+              <tbody id="lb-body"><tr><td colspan="4">Загрузка…</td></tr></tbody>
+            </table>
+          </section>
+
+          <section class="card hidden" id="users">
+            <h2>Игроки</h2>
+            <div class="search">
+              <input class="input flex-1" id="user-q" placeholder="Поиск по имени / @username / tg_id" />
+              <button class="btn" id="btn-user-search">Искать</button>
+            </div>
+            <table class="table">
+              <thead><tr><th>Игрок</th><th>Очки</th><th>Уник.</th><th>Авто</th><th>Действия</th></tr></thead>
+              <tbody id="user-body"><tr><td colspan="5">Введите запрос и нажмите «Искать»</td></tr></tbody>
+            </table>
+          </section>
+
+          <section class="card hidden" id="actions">
+            <h2>Действия</h2>
+            <div class="row">
+              <input class="input" id="bonus-tg" placeholder="tg_id" style="max-width:220px" />
+              <input class="input" id="bonus-amt" placeholder="сумма (напр. 5)" style="max-width:160px" />
+              <input class="input flex-1" id="bonus-reason" placeholder="причина (опционально)" />
+              <button class="btn" id="btn-bonus">➕ Начислить бонус</button>
+            </div>
+            <p class="muted">Для чувствительных операций админ должен открыть эту страницу из бота — чтобы подтянулся Telegram initData.</p>
+          </section>
+        </main>
+      </div>
+
+      <footer class="footer">Тема синхронизируется с Telegram и системой</footer>
+    </div>
+
+    <script src="./admin.js"></script>
+  </body>
+</html>

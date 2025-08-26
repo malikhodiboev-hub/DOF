@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Стритрейсер — мобильная версия + PvP</title>
+  <link rel="stylesheet" href="./style.css?v=hotfix1">
+</head>
+<body>
+  <header class="appbar">
+    <div class="brand">🏁 Стритрейсер</div>
+    <div class="balance"><span id="balance">0</span> ¤ · 💠 <span id="plate">0</span></div>
+  </header>
+
+  <main class="container">
+    <section id="garage" class="card">
+      <h2>Гараж</h2>
+      <div id="garage-list" class="list"></div>
+      <div class="hint muted">Выбери авто, затем «Гонка» или прокачай его.</div>
+    </section>
+
+    <section id="shop" class="card">
+      <h2>Магазин</h2>
+      <div id="shop-list" class="grid"></div>
+    </section>
+
+    <section id="race" class="card">
+      <h2>Гонка</h2>
+      <div class="race-ui">
+        <select id="race-car"></select>
+        <button id="btn-race" class="btn primary">Старт</button>
+        <div class="muted">Энергия: <span id="energy">0</span></div>
+      </div>
+      <div id="race-stage" class="stage hidden">
+        <canvas id="confetti" class="confetti hidden"></canvas>
+        <div class="track">
+          <div class="car car-p">🚗</div>
+          <div class="car car-a">🚙</div>
+          <div class="flags">🏁</div>
+        </div>
+        <div class="bars">
+          <div class="bar"><div id="bar-p"></div></div>
+          <div class="bar"><div id="bar-a"></div></div>
+        </div>
+        <div id="race-result" class="result"></div>
+      </div>
+    </section>
+
+    <section id="pvp" class="card">
+      <h2>PvP</h2>
+      <div class="pvp-form">
+        <input id="pvp-to" type="number" placeholder="TG ID соперника">
+        <select id="pvp-car"></select>
+        <button id="pvp-send" class="btn primary">Вызвать</button>
+      </div>
+      <div class="pvp-lists">
+        <div>
+          <h3>Входящие</h3>
+          <div id="pvp-in"></div>
+        </div>
+        <div>
+          <h3>Исходящие</h3>
+          <div id="pvp-out"></div>
+        </div>
+        <div>
+          <h3>История</h3>
+          <div id="pvp-hist"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <nav class="tabbar">
+    <button data-tab="garage" class="active">Гараж</button>
+    <button data-tab="shop">Магазин</button>
+    <button data-tab="race">Гонка</button>
+    <button data-tab="pvp">PvP</button>
+  </nav>
+
+  <script src="./mega-app.js?v=hotfix1"></script>
+</body>
+</html>

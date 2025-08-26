@@ -1,0 +1,9 @@
+/* base styles */
+.topbar{position:sticky;top:0;z-index:30;display:flex;justify-content:center;padding:12px;background:rgba(0,0,0,.04);backdrop-filter:saturate(1.2) blur(6px)}
+.btn{display:inline-block;padding:10px 14px;border-radius:12px;font-weight:600;text-decoration:none;border:1px solid rgba(0,0,0,.08)}
+.btn-primary{background:#111;color:#fff;border-color:#000}
+@media (prefers-color-scheme:dark){
+  .topbar{background:rgba(255,255,255,.06)}
+  .btn{border-color:rgba(255,255,255,.12)}
+  .btn-primary{background:#fff;color:#111}
+}

@@ -1,0 +1,18 @@
+{
+  "name": "tg-plate-game",
+  "version": "1.1.0",
+  "type": "module",
+  "scripts": {
+    "dev:web": "node server.js",
+    "dev:bot": "node bot.js",
+    "db:apply": "node db/cli-init.js"
+  },
+  "dependencies": {
+    "better-sqlite3": "^9.4.0",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "helmet": "^7.2.0",
+    "node-fetch": "^3.3.2",
+    "telegraf": "^4.16.3"
+  }
+}
