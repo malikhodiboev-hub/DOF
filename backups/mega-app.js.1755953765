@@ -1,0 +1,291 @@
+// mega-app.js — v1.3 (mobile, confetti, plate points, PvP)
+const $ = (q)=>document.querySelector(q);
+const $$ = (q)=>Array.from(document.querySelectorAll(q));
+
+const state = {
+  me: null,
+  garage: [],
+  balance: 0,
+  energy: 0,
+  plate: 0,
+  catalog: [
+    { id:'civic_ek9', name:'Honda Civic EK9', price: 800, emoji:'🚗' },
+    { id:'supra_a80', name:'Toyota Supra A80', price: 1500, emoji:'🏎️' },
+    { id:'lada_2107', name:'LADA 2107', price: 300, emoji:'🚙' },
+    { id:'gtr_r34', name:'Nissan GT-R R34', price: 2200, emoji:'🏁' },
+    { id:'m3_e46', name:'BMW M3 E46', price: 1800, emoji:'🚘' },
+  ],
+  selectedCar: null,
+};
+
+function api(path, opt={}){
+  const url = new URL(path, location.origin);
+  // Проброс tg_id через query
+  if (window.Telegram?.WebApp?.initDataUnsafe?.user?.id) {
+    url.searchParams.set('tg_id', Telegram.WebApp.initDataUnsafe.user.id);
+  }
+  return fetch(url.toString(), {
+    method: opt.method || 'GET',
+    headers: { 'Content-Type':'application/json' },
+    body: opt.body ? JSON.stringify(opt.body) : undefined,
+  }).then(r => r.json());
+}
+
+function fmt(n){ return (n|0).toLocaleString('ru-RU'); }
+function setBalance(v){ state.balance=v; $('#balance').textContent=fmt(v); }
+function setEnergy(v){ state.energy=v; $('#energy').textContent=v; }
+function setPlate(v){ state.plate=v; $('#plate').textContent=fmt(v); }
+
+// --- Confetti (tiny canvas, no libs) ---
+function confettiBurst(count=120, duration=1200){
+  const c = $('#confetti'); if (!c) return;
+  c.classList.remove('hidden');
+  const ctx = c.getContext('2d');
+  const rect = c.getBoundingClientRect();
+  c.width = rect.width * devicePixelRatio;
+  c.height = rect.height * devicePixelRatio;
+  const colors = ['#10b981','#22d3ee','#f59e0b','#ef4444','#8b5cf6','#eab308','#3b82f6'];
+  const pieces = Array.from({length:count},()=> ({
+    x: Math.random()*c.width,
+    y: -Math.random()*c.height*0.3,
+    r: Math.random()*6+3,
+    vx: (Math.random()-0.5)*2,
+    vy: Math.random()*2+2,
+    color: colors[(Math.random()*colors.length)|0],
+    rot: Math.random()*Math.PI,
+    vr: (Math.random()-0.5)*0.2
+  }));
+  let start = performance.now();
+  function tick(t){
+    const elapsed = t - start;
+    ctx.clearRect(0,0,c.width,c.height);
+    pieces.forEach(p=>{
+      p.x += p.vx; p.y += p.vy; p.rot += p.vr;
+      ctx.save();
+      ctx.translate(p.x,p.y);
+      ctx.rotate(p.rot);
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-p.r, -p.r/2, p.r*2, p.r);
+      ctx.restore();
+    });
+    if (elapsed < duration) requestAnimationFrame(tick);
+    else { c.classList.add('hidden'); ctx.clearRect(0,0,c.width,c.height); }
+  }
+  requestAnimationFrame(tick);
+}
+
+// --- Load/Render ---
+async function loadMe(){
+  const res = await api('/api/racer/me');
+  if (!res.ok) throw new Error('me failed');
+  state.me = res.me;
+  setBalance(res.me.balance);
+  setEnergy(res.me.energy);
+  setPlate(res.me.plate_points || 0);
+  state.garage = res.me.garage || [];
+  renderGarage();
+  renderShop();
+  fillRaceSelect();
+  fillPvpSelect();
+  await loadPvp();
+}
+
+function renderGarage(){
+  const box = $('#garage-list'); box.innerHTML='';
+  if (!state.garage.length){
+    box.innerHTML = `<div class="muted">Гараж пуст. Купите авто в магазине.</div>`;
+    return;
+  }
+  state.garage.forEach(g=>{
+    const row = document.createElement('div');
+    row.className='row upgrade-pop';
+    row.innerHTML = `
+      <div class="title">${g.car_id}</div>
+      <div class="lvl">L${g.level||1}</div>
+      <div class="actions">
+        <button class="btn ghost btn-up" data-id="${g.car_id}">⭑ Улучшить</button>
+      </div>`;
+    row.querySelector('.btn-up').onclick = ()=> upgradeCar(g.car_id);
+    box.appendChild(row);
+  });
+}
+
+function renderShop(){
+  const grid = $('#shop-list'); grid.innerHTML='';
+  state.catalog.forEach(c=>{
+    const owned = state.garage.find(g=>g.car_id===c.id);
+    const card = document.createElement('div');
+    card.className='card';
+    card.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+        <div style="font-size:20px">${c.emoji} ${c.name}</div>
+        <div class="muted">${fmt(c.price)} ¤</div>
+      </div>
+      <div style="margin-top:8px;text-align:right">
+        <button class="btn ${owned?'':'primary'}" ${owned?'disabled':''} data-id="${c.id}">${owned?'Куплено':'Купить'}</button>
+      </div>`;
+    card.querySelector('button').onclick = ()=> buyCar(c);
+    grid.appendChild(card);
+  });
+}
+
+function fillRaceSelect(){
+  const sel = $('#race-car'); sel.innerHTML='';
+  state.garage.forEach(g=>{
+    const o=document.createElement('option');
+    o.value=g.car_id; o.textContent=`${g.car_id} (L${g.level})`;
+    sel.appendChild(o);
+  });
+  state.selectedCar = sel.value || null;
+  sel.onchange = ()=> state.selectedCar = sel.value;
+}
+
+function fillPvpSelect(){
+  const sel = $('#pvp-car'); sel.innerHTML='';
+  state.garage.forEach(g=>{
+    const o=document.createElement('option');
+    o.value=g.car_id; o.textContent=`${g.car_id} (L${g.level})`;
+    sel.appendChild(o);
+  });
+}
+
+async function buyCar(c){
+  const res = await api('/api/racer/car/buy', { method:'POST', body:{ car_id:c.id, price:c.price }});
+  if (!res.ok){ alert('Недостаточно средств или уже куплено.'); return; }
+  setBalance(res.balance);
+  state.garage = res.garage || state.garage.concat([{car_id:c.id, level:1}]);
+  renderShop();
+  renderGarage();
+  fillRaceSelect();
+  fillPvpSelect();
+}
+
+async function upgradeCar(id){
+  const res = await api('/api/racer/upgrade', { method:'POST', body:{ car_id:id }});
+  if (!res.ok){ alert('Нет средств или авто не найдено'); return; }
+  setBalance(res.balance);
+  const g = state.garage.find(x=>x.car_id===id); if (g) g.level = res.level;
+  renderGarage();
+  confettiBurst(150, 1400); // 🎉 при апгрейде
+}
+
+function animateRace(replay, didWin){
+  $('#race-stage').classList.remove('hidden');
+  const carP = document.querySelector('.car-p');
+  const carA = document.querySelector('.car-a');
+  const barP = $('#bar-p'); const barA = $('#bar-a');
+  let i=0;
+  function step(){
+    if (i>=replay.length) return;
+    const r = replay[i++];
+    const pxP = Math.min(92, r.p);
+    const pxA = Math.min(92, r.a);
+    carP.style.left = `${6 + pxP*0.9}%`; carP.classList.add('move');
+    carA.style.left = `${6 + pxA*0.9}%`; carA.classList.add('move');
+    barP.style.width = `${r.p}%`; barA.style.width = `${r.a}%`;
+    requestAnimationFrame(()=> setTimeout(step, 80));
+  }
+  step();
+  if (didWin) setTimeout(()=> confettiBurst(200, 1600), replay.length*80 + 100);
+}
+
+async function startRace(){
+  if (!state.selectedCar){ alert('Выберите авто'); return; }
+  $('#race-result').textContent='';
+  $('#race-stage').classList.remove('hidden');
+  $('#bar-p').style.width='0%'; $('#bar-a').style.width='0%';
+  document.querySelector('.car-p').style.left='6px';
+  document.querySelector('.car-a').style.left='6px';
+
+  const res = await api('/api/racer/race/start', { method:'POST', body:{ car_id: state.selectedCar }});
+  if (!res.ok){ alert(res.error==='NO_ENERGY'?'Нет энергии':'Ошибка'); return; }
+  setBalance(res.balance); setEnergy(res.energy);
+  animateRace(res.replay||[], res.result==='win');
+  setTimeout(()=>{
+    const box = $('#race-result');
+    if (res.result==='win') { box.textContent='Победа! +'+res.prize+' ¤'; box.className='result winFlash'; }
+    else if (res.result==='lose') { box.textContent='Поражение'; box.className='result'; }
+    else { box.textContent='Ничья +'+res.prize+' ¤'; box.className='result'; }
+  }, 120* (res.replay?.length||50));
+}
+
+// --- PvP UI ---
+async function loadPvp(){
+  const res = await api('/api/racer/pvp/list');
+  if (!res.ok) return;
+  const mk = (r)=>`<div class="list row">
+    <div>#${r.id} • ${r.car_id}</div>
+    <div class="muted">${r.status}</div>
+    ${r.status==='pending' && r.to_tg===state.me.tg_id ?
+      `<div><button class="btn primary" data-acc="${r.id}">Принять</button>
+           <button class="btn ghost" data-dec="${r.id}">Отклонить</button></div>` : ''}
+    ${r.status==='pending' && r.from_tg===state.me.tg_id ?
+      `<div><button class="btn ghost" data-can="${r.id}">Отменить</button></div>` : ''}
+  </div>`;
+
+  $('#pvp-in').innerHTML = (res.incoming||[]).map(mk).join('') || `<div class="muted">пусто</div>`;
+  $('#pvp-out').innerHTML = (res.outgoing||[]).map(mk).join('') || `<div class="muted">пусто</div>`;
+  $('#pvp-hist').innerHTML = (res.history||[]).map(r=>`<div class="list row">
+    <div>#${r.id} • ${r.car_id}</div><div class="muted">${r.status}</div></div>`).join('') || `<div class="muted">пусто</div>`;
+
+  // bind buttons
+  $$('#pvp-in [data-acc]').forEach(b=> b.onclick = ()=> acceptChal(b.dataset.acc));
+  $$('#pvp-in [data-dec]').forEach(b=> b.onclick = ()=> declineChal(b.dataset.dec));
+  $$('#pvp-out [data-can]').forEach(b=> b.onclick = ()=> cancelChal(b.dataset.can));
+}
+
+async function sendChal(){
+  const to = Number($('#pvp-to').value||0);
+  const car_id = $('#pvp-car').value;
+  if (!to || !car_id){ alert('Заполни TG ID и авто'); return; }
+  const res = await api('/api/racer/pvp/challenge', { method:'POST', body:{ to_tg: to, car_id } });
+  if (!res.ok){ alert('Ошибка'); return; }
+  await loadPvp();
+}
+
+async function acceptChal(id){
+  const res = await api('/api/racer/pvp/accept', { method:'POST', body:{ challenge_id: Number(id) }});
+  if (!res.ok){ alert(res.error==='NO_ENERGY'?'Нет энергии':'Ошибка'); return; }
+  setBalance(res.to.tg_id===state.me.tg_id ? res.to.balance : res.from.balance);
+  setEnergy(res.to.tg_id===state.me.tg_id ? res.to.energy : res.from.energy);
+  confettiBurst(200, 1600); // 🎉 победа будет отмечена анимацией на стороне клиента через replay — тут просто эффект
+  await loadPvp();
+}
+
+async function declineChal(id){
+  await api('/api/racer/pvp/decline', { method:'POST', body:{ challenge_id: Number(id) }});
+  await loadPvp();
+}
+async function cancelChal(id){
+  await api('/api/racer/pvp/cancel', { method:'POST', body:{ challenge_id: Number(id) }});
+  await loadPvp();
+}
+
+function bindUI(){
+  // tabs
+  $$('.tabbar button').forEach(b=>{
+    b.onclick = ()=>{
+      $$('.tabbar button').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active');
+      const id = b.dataset.tab;
+      ['garage','shop','race','pvp'].forEach(x=> $('#'+x).style.display = (x===id?'block':'none'));
+    };
+  });
+  $('#btn-race').onclick = startRace;
+  $('#pvp-send').onclick = sendChal;
+
+  // default tab
+  ['garage','shop','race','pvp'].forEach(x=> $('#'+x).style.display='none');
+  $('#garage').style.display='block';
+}
+
+(async function init(){
+  try{
+    bindUI();
+    await loadMe();
+    if (window.Telegram && Telegram.WebApp) Telegram.WebApp.expand();
+  }catch(e){
+    console.error(e);
+    alert('Ошибка инициализации');
+  }
+})();

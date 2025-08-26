@@ -1,0 +1,105 @@
+:root{
+  --bg:#0b0b0c; --fg:#e5e7eb; --muted:#9ca3af;
+  --card:#151518; --acc:#10b981; --danger:#ef4444;
+  --bar:#242428; --barp:#22d3ee; --bara:#f59e0b;
+}
+@media (prefers-color-scheme:light){
+  :root{ --bg:#f7f7f8; --fg:#111827; --muted:#6b7280; --card:#ffffff; --bar:#e5e7eb; }
+}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font: 15px/1.45 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+}
+
+.appbar{
+  position:sticky; top:0; z-index:10; display:flex; justify-content:space-between; align-items:center;
+  padding:12px 16px; background:rgba(0,0,0,.35); backdrop-filter: blur(6px) saturate(1.2);
+}
+@media (prefers-color-scheme:light){ .appbar{ background:rgba(255,255,255,.6); } }
+.brand{font-weight:800}
+.balance{font-weight:700}
+
+.container{max-width:720px; margin:16px auto 90px; padding:0 12px;}
+
+.card{
+  background:var(--card); border:1px solid rgba(255,255,255,.06);
+  border-radius:16px; padding:14px; margin-bottom:14px;
+  box-shadow: 0 8px 30px rgba(0,0,0,.1);
+}
+.card h2{margin:0 0 8px 0; font-size:18px}
+
+.grid{display:grid; gap:10px; grid-template-columns:repeat(2, minmax(0,1fr))}
+@media (min-width:480px){ .grid{ grid-template-columns:repeat(3, minmax(0,1fr)); } }
+
+.list .row{display:flex; align-items:center; justify-content:space-between; padding:8px 6px; border-radius:12px; background:var(--bar); margin:6px 0}
+.list .row .title{font-weight:700}
+.list .row .lvl{opacity:.9}
+
+.btn{
+  appearance:none; border:none; border-radius:12px; padding:10px 14px; font-weight:700;
+  background:#2d2e32; color:#fff; cursor:pointer;
+}
+.btn.primary{ background: var(--acc); color:#04130f; }
+.btn.ghost{ background: transparent; border:1px solid rgba(255,255,255,.2); color:var(--fg) }
+.btn:active{ transform: translateY(1px) }
+
+input, select{
+  width:100%; padding:10px 12px; border-radius:12px; border:1px solid rgba(255,255,255,.12);
+  background:transparent; color:var(--fg); outline:none;
+}
+.pvp-form{ display:grid; grid-template-columns:1fr 1fr auto; gap:8px; align-items:center }
+
+.muted{ color:var(--muted) }
+.hidden{ display:none }
+
+.tabbar{
+  position:fixed; left:0; right:0; bottom:0; z-index:20; display:flex; gap:8px;
+  background:rgba(0,0,0,.45); backdrop-filter: blur(6px) saturate(1.2);
+  padding:10px env(safe-area-inset-right) calc(10px + env(safe-area-inset-bottom)) env(safe-area-inset-left);
+  justify-content:center; flex-wrap:wrap;
+}
+@media (prefers-color-scheme:light){ .tabbar{ background:rgba(255,255,255,.7); } }
+.tabbar button{
+  flex:0 0 auto; min-width:100px; padding:10px 12px; border-radius:12px; border:0; font-weight:800;
+  background:#2d2e32; color:#fff; opacity:.85
+}
+.tabbar button.active{ background:var(--acc); color:#04130f; opacity:1 }
+
+/* race stage */
+.stage{ margin-top:12px }
+.track{
+  position:relative; background:linear-gradient(180deg, #0e0f12, #131419);
+  border-radius:12px; height:140px; border:1px solid rgba(255,255,255,.06);
+  overflow:hidden;
+}
+.car{ position:absolute; left:6px; font-size:26px; transform:translateY(-50%); }
+.car-p{ top:40% } .car-a{ top:70% }
+.flags{ position:absolute; right:10px; top:50%; transform:translateY(-50%); font-size:22px; opacity:.8 }
+
+.bars{ margin-top:8px; display:grid; gap:6px }
+.bar{ background:var(--bar); border-radius:10px; overflow:hidden; height:10px }
+.bar>div{ height:100%; width:0% }
+#bar-p{ background: var(--barp) }
+#bar-a{ background: var(--bara) }
+
+/* upgrade animation */
+.upgrade-pop{ animation: pop .5s cubic-bezier(.2, .8, .2, 1) }
+@keyframes pop{
+  from{ transform: scale(0.9); filter: brightness(1.2) }
+  to{ transform: scale(1); filter: brightness(1) }
+}
+
+/* race animation */
+.move{ transition: left .08s linear }
+.winFlash{ animation: flash 1.2s ease-in-out }
+@keyframes flash{
+  0%{box-shadow:0 0 0 rgba(16,185,129,0)}
+  50%{box-shadow:0 0 30px rgba(16,185,129,.6)}
+  100%{box-shadow:0 0 0 rgba(16,185,129,0)}
+}
+
+/* confetti */
+.confetti{ position:absolute; inset:0; width:100%; height:100%; pointer-events:none }
