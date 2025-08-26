@@ -8,6 +8,7 @@ import racer from './racer/server-racer-mega.js';
 
 // DB helpers (better-sqlite3 wrappers in your project)
 import { query, run, get } from './db/db.js';
+import { validateInitData } from './lib/validateInitData.js';
 
 dotenv.config();
 
@@ -41,33 +42,35 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // ================= FULL ROUTES (single source of truth) =================
 
-// --- helpers & auth (no cryptographic validation here for brevity) ---
+// --- helpers & auth ---
 const ADMIN_IDS = new Set(String(process.env.ADMIN_TG_IDS || '')
   .split(',')
   .map(s => s.trim())
   .filter(Boolean));
 
 function parseInitData(req){
-  // In production verify hash per Telegram docs
   const init = req.get('X-Telegram-Init-Data') || '';
+  const token = process.env.BOT_TOKEN || '';
+  const res = validateInitData(init, token);
+  if (!res.ok || !res.data.user) return { error: 'INVALID_SIGNATURE' };
   try {
-    const params = new URLSearchParams(init);
-    const user = params.get('user');
-    return user ? JSON.parse(user) : null;
+    const user = JSON.parse(res.data.user);
+    return { user };
   } catch {
-    return null;
+    return { error: 'INVALID_USER' };
   }
 }
 
 function requireUser(req, res, next){
-  const user = parseInitData(req);
-  if (!user || !user.id) return res.status(401).json({ ok:false, error:'NO_TELEGRAM_USER' });
+  const { user, error } = parseInitData(req);
+  if (!user || !user.id) return res.status(401).json({ ok:false, error: error || 'NO_TELEGRAM_USER' });
   req.tgUser = user;
   next();
 }
 function requireAdmin(req, res, next){
-  const user = parseInitData(req);
-  if (!user || !ADMIN_IDS.has(String(user.id))) return res.status(403).json({ ok:false, error:'FORBIDDEN' });
+  const { user, error } = parseInitData(req);
+  if (!user || !user.id) return res.status(401).json({ ok:false, error: error || 'NO_TELEGRAM_USER' });
+  if (!ADMIN_IDS.has(String(user.id))) return res.status(403).json({ ok:false, error:'FORBIDDEN' });
   req.tgUser = user;
   next();
 }
