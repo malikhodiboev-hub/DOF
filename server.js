@@ -49,15 +49,16 @@ const ADMIN_IDS = new Set(String(process.env.ADMIN_TG_IDS || '')
   .filter(Boolean));
 
 function parseInitData(req){
+  if (req.tgInit) return req.tgInit;
   const init = req.get('X-Telegram-Init-Data') || '';
   const token = process.env.BOT_TOKEN || '';
   const res = validateInitData(init, token);
-  if (!res.ok || !res.data.user) return { error: 'INVALID_SIGNATURE' };
+  if (!res.ok || !res.data.user) return req.tgInit = { error: 'INVALID_SIGNATURE' };
   try {
     const user = JSON.parse(res.data.user);
-    return { user };
+    return req.tgInit = { user };
   } catch {
-    return { error: 'INVALID_USER' };
+    return req.tgInit = { error: 'INVALID_USER' };
   }
 }
 
