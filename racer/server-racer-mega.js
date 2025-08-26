@@ -71,6 +71,13 @@ function requireUser(req,res,next){
   req.tgUser = u;
   next();
 }
+function requireAdmin(req,res,next){
+  const header = req.headers['x-admin'];
+  const ids = String(process.env.ADMIN_IDS||'').split(',').map(s=>Number(s.trim())).filter(Boolean);
+  const uid = req.tgUser?.id;
+  if (header === '1' || (uid && ids.includes(uid))) return next();
+  return res.status(403).json({ ok:false, error:'NO_ADMIN' });
+}
 function getBalance(tg_id){
   const row = db.get(`
     SELECT COALESCE(SUM(CASE WHEN kind='earn' THEN amount WHEN kind='spend' THEN -amount ELSE 0 END),0) AS bal
@@ -120,14 +127,16 @@ router.get('/api/racer/me', requireUser, (req,res)=>{
   }catch(e){ res.status(500).json({ ok:false, error:'INTERNAL' }); }
 });
 
-router.post('/api/racer/debug/credit', requireUser, (req,res)=>{
-  try{
-    const amount = Math.max(0, Number(req.body?.amount||0));
-    if (!amount) return res.status(400).json({ok:false,error:'BAD_AMOUNT'});
-    db.run(`INSERT INTO racer_tx(tg_id,kind,amount,reason) VALUES(?,?,?,?)`, [req.tgUser.id,'earn',amount,'debug_topup']);
-    res.json({ok:true, balance:getBalance(req.tgUser.id)});
-  }catch(e){ res.status(500).json({ok:false}); }
-});
+if (process.env.NODE_ENV !== 'production') {
+  router.post('/api/racer/debug/credit', requireUser, requireAdmin, (req,res)=>{
+    try{
+      const amount = Math.max(0, Number(req.body?.amount||0));
+      if (!amount) return res.status(400).json({ok:false,error:'BAD_AMOUNT'});
+      db.run(`INSERT INTO racer_tx(tg_id,kind,amount,reason) VALUES(?,?,?,?)`, [req.tgUser.id,'earn',amount,'debug_topup']);
+      res.json({ok:true, balance:getBalance(req.tgUser.id)});
+    }catch(e){ res.status(500).json({ok:false}); }
+  });
+}
 
 // ---------- API: shop / garage ----------
 router.post('/api/racer/car/buy', requireUser, (req,res)=>{
