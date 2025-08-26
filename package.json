@@ -5,7 +5,8 @@
   "scripts": {
     "dev:web": "node server.js",
     "dev:bot": "node bot.js",
-    "db:apply": "node db/cli-init.js"
+    "db:apply": "node db/cli-init.js",
+    "test": "node --test"
   },
   "dependencies": {
     "better-sqlite3": "^9.4.0",
